@@ -1,0 +1,1019 @@
+1.개발환경
+ 1)Spring = Eclips + spring API
+ 2)JDK
+ 3)DB
+ 4)WebServer
+  a.tomcat
+  b.spring에서 제공하는 자체 webserver
+
+2.Encoding
+ 1)tomcat/conf/server.xml -> URIEncoding="UTF-8"
+ 2)spring - java, jsp, css, html
+ 3)FilterClass를 사용해서
+
+
+************************************************
+-- USER SQL
+CREATE USER spring01 IDENTIFIED BY "spring01"  
+DEFAULT TABLESPACE "USERS"
+TEMPORARY TABLESPACE "TEMP";
+
+-- QUOTAS
+
+-- ROLES
+GRANT "CONNECT" TO spring01 ;
+GRANT "RESOURCE" TO spring01 ;
+
+-- SYSTEM PRIVILEGES
+************************************************
+************************************************
+Container : 객체의 생명주기 관리(생성 new, 삭제)
+Component : 객체(Container 에서 만들어진 객체)
+************************************************
+Spring project 생성
+ 1.File -> new -> spring legacy project
+ 2.프로젝트명 입력
+ 3.template ->spring mvc project
+ 4.패키지명 입력(ex com.iu.s1       s1이 context name)
+
+API Error 처리
+1.프로젝트 우클릭 -> Run As -> maven clean : class 파일들 삭제
+->프로젝트 우클릭 -> maven -> update project -> ok
+
+2.C:\Users\502-07\.m2\repository 하위의 모든 폴더 삭제 후 spring 재실행
+
+3.다른 사람의 오류 없는 repository 복사해서 자기 repository 폴더에 복사
+
+
+
+2.DispatcherServlet
+ 모든 요청은 :DispatcherServlet 전달
+ :DispatcherServlet에서 각 Controller에 전달
+
+ DispatcherServlet의 설정파일은
+ /WEB-INF/spring/appServlet/servlet-context.xml
+ /WEB-INF/spring/root-context.xml
+
+
+ - root-context : 전체 app 설정
+ - servlet-context :DispatcherServlet, Controller 설정
+
+ 1)servlet-context.xml
+---------------------------------------------------------------------
+  <resources mapping="/resources/**" location="/resources/" />
+  jsp를 제외한 자원들 (js,css,image 등)은 /resources 하위에 저장
+
+ -다른 경로를 추가하고자 하는 경우
+  <resources location="/files/" mapping="/files/**"/>
+---------------------------------------------------------------------
+	<beans:bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<beans:property name="prefix" value="/WEB-INF/views/" />
+		<beans:property name="suffix" value=".jsp" />
+	</beans:bean>
+
+ - 뷰페이지의 경로 만들기
+ - Controller에서 return 되는 경로명에 
+   prefix + 경로명 + suffix
+   ex) 경로명 test
+       /WEB-INF/views/ + test + .jsp
+---------------------------------------------------------------------
+  <context:component-scan base-package="com.iu.s1" />
+  container가 annotation을 찾는 범위
+
+
+3.IOC/DI
+ 1)DI(Dependency Injection)
+ -setter를 이용
+ -생성자를 이용
+
+ 2)IOC(Inversion of Controller)
+ -객체의 생성 및 주입을 개발자가 아닌 Container로 위임
+ -대신 설계도를 제작
+
+  A.xml을 이용
+   -root-context, servlet-context
+    <beans:bean class="생성할 클래스의 풀네임" id="참조변수명">
+	//setter----------------------------------------------------------
+	<beans:property name="setter명" value="값"|| ref="참조변수명">    
+
+    </beans:bean>
+
+	<beans:bean class="com.iu.s1.Engine" id="engine">
+		<beans:property name="fuel" value="GAS"></beans:property>
+		<beans:property name="hp" value="250"></beans:property>
+	</beans:bean>
+	<!-- Car car = new Car() -->
+	<beans:bean class="com.iu.s1.Car" id="car">
+		<beans:property name="brand" value="BMW"></beans:property>
+		<!-- car.setEngine(engine) -->
+		<beans:property name="engine" ref="engine"></beans:property>
+	</beans:bean>
+
+	//constructor------------------------------------------------------
+	<bean class="생성할 클래스의 클래스명" id="참조변수">
+	   <constructor=arg name="매개변수명" || index="매개변수 순서" || type="매개변수 데이터 타입">
+	</bean>
+
+
+  B.annotation을 이용 : 설명 + 실행
+   -클래스의 선언부 위
+   -멤버변수 선언부 위
+   -멤버매서드 선언부 위
+
+   1)객체생성
+    a.@Controller : Controller 객체 
+    b.@Service	  : Service 객체
+    c.@Repository : DAO 객체
+    d.@Component  : 그 외 객체
+
+   2)객체주입
+    a.@Inject	  : 데이터 타입을 기준으로 빈을 찾아 줌
+    b.@Autowired  : 데이터 타입을 기준으로 빈을 찾아 줌
+    c.@Resource   : 참조변수 이름으로 빈을 찾아 줌
+    
+************
+POJO
+************
+
+4.Controller 작성법
+ 1)일반 클래스를 생성
+ 2)class의 선언부 위에 @Controller annotation 추가
+ 3)class의 선언부 위에 @RequestMapping annotation 추가(option)
+ 4)일반 멤버 메서드 선언
+ 5)멤버 메서드 선언부 위에 @RequestMapping annotation 추가
+  -@RequestMapping
+   --value   : 요청 URI
+   --method  : RequestMethod.GET || method = RequestMethod.POST
+   --method  : {RequestMethod.GET, RequestMethod.POST}
+   --default는 GET
+ 6)메서드의 리턴 타입
+  a.String : view의 경로와 파일명
+   ex)return "test" -> /WEB-INF/views/test.jsp
+   --default 는 foward 방식으로 이동
+   --return "redirect:주소";
+   --redirect시 데이터를 전달 하고 싶을 때
+   --메서드의 매개변수로 RedirectAttributes 선언
+   --rd.addFlashAttribute("키",밸류);
+
+
+
+  b.void : 요청 URI 자체가 view의 경로명
+   ex) @RequestMapping(value="/test") -> /WEB-INF/views/test.jsp
+
+  c.ModelAndView : Model + View
+
+
+
+5.메서드의 매개변수(파라미터 처리)
+ 1)HttpServletRequest
+  --메서드의 매개변수로 HttpServletRequest 선언
+
+ 2)파라미터와 동일한 데이터 타입과 변수명을 선언
+  a.파라미터 이름과 변수명이 일치하지 않을경우
+   ex)@RequestParam(value="파라미터 이름") 데이터타입 변수명 
+   ex)@RequestParam(value="curPage") int c
+  
+  b.파라미터가 넘어오지 않을 때
+   ex)@RequestParam(defaultValue = "원하는 기본 값") 데이터타입 변수명 
+   ex)@RequestParam(defaultValue="1") int c
+
+  c.매개변수를 선언했지만 필수가 아닐 때
+   ex)@RequestParam(required=false) Integer num
+
+  d.Bean(DTO)를 이용하는 방식
+   ex)public String qnaWriteform(QnaDTO qnaDTO)
+   --파라미터 이름과 setter의 이름이 동일해야 함
+
+
+6.백엔드에서 view(front,jsp)로 데이터 전송
+ 1)Model
+  --메서드의 매개변수로 Model 선언
+  --model.addAttribute("키",밸류	);	//Model은 request와 같음
+  --model.addAttribute(밸류);	//변수명이 속성명이 됨
+    ex)model.addAttribute(qnaDTO);  -> ${qnaDTO}
+
+  --메서드 체이닝
+    model.addAttribute(qnaDTO)
+         .addAttribute("board",board);
+
+
+ 2)ModelAndView
+  --메서드 내에서 ModelAndView 객체 생성 후 리턴
+   ModelAndView mv = new ModelAndView();
+   mv.addObject("key", value);
+   mv.setViewName("view의 경로명과 파일명");
+
+
+7.Test
+ 1)porm.xml
+<!-- Test -->
+<!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
+<dependency>
+	<groupId>org.springframework</groupId>
+	<artifactId>spring-test</artifactId>
+	<version>${org.springframework-version}</version>
+	<scope>test</scope>
+</dependency>
+
+<dependency>
+	<groupId>junit</groupId>
+	<artifactId>junit</artifactId>
+	<version>4.12</version>
+	<scope>test</scope>
+</dependency>        
+
+ 2)test package에 테스트용도의 자바 클래스 생성
+
+  --추상 클래스 작성
+    @RunWith(SpringJUnit4ClassRunner.class)
+    @ContextConfiguration(locations= {"file:src/main/webapp/WEB-INF/spring/**/*-context.xml"})
+    public abstract class AbstractTestCase {}
+
+ 3)단정문
+  assertNull(obj)	: obj가 NULL 인지 확인
+  assertNotNull(obj)	: objrk NULL 이 아닌지 확인
+  assertTrue(a)		: a가 true 인지 확인
+  assertEquals(a,b)	: a와 b가 같은지 확인
+
+ 4)초기화 및 해제
+  @BeforeClass	: 테스트 클래스에서 제일 처음에 한번 실행되는 Annotation
+	@BeforeClass
+	public static void start(){}
+
+  @AfterClass	: 테스트 클래스에서 제일 마지막에 한번 실행되는 Annotation
+	@AfterClass
+	public static void finish(){}
+
+  @Before	: 테스트 클래스 내의 각각의 테스트 시작전에 실행되는 Annotation
+	@Before
+	public void before(){}
+
+  @After	: 테스트 클래스 내의 각각의 테스트가 끝나고  실행되는 Annotation
+	@After
+	public void after(){}
+
+
+
+ 5)테스트 메서드 지정
+  a.@Test Annotation을 메서드 위에 선언하면 이 메서드는 테스트 대상 메서드가 됨
+  b.@Test(timeout=3000)	:테스트 메서드가 결과를 반환하는 데 3000밀리초를 넘으면 실패
+  c.@Test(expected=RuntimeException.class) : 테스트 메서드가 예외가 발생해야 테스트가 성공
+
+************************************************************************************
+
+	ref	step	depth
+	ref: 그룹을 묶는 번호
+	step: 그룹내의 순서
+	depth: 들여쓰기(답글표시)
+
+  ref
+  1.원본: 자기자신의 글번호
+  2.답글: 부모글의 글번호
+
+  step
+  1.원본: 0
+  2.답글
+   a.update : ref가 부모의 ref와 같고 step이 부모의 step보다 큰 것들의 step 1증가
+   b.insert : 부모의 step + 1 한 값을 자신의 step에 입력
+  
+  depth
+  1.원본:0
+  2.답글:부모의 depth+1 한 값을 자신의 depth에 입력
+
+
+************************************************************************************
+
+<!-- Encoding Filter -->
+<filter>
+	<filter-name>encode</filter-name>
+	<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+	<init-param>
+		<param-name>encoding</param-name>
+		<param-value>UTF-8</param-value>
+	</init-param>
+</filter>
+<filter-mapping>
+	<filter-name>encode</filter-name>
+	<url-pattern>/*</url-pattern>
+</filter-mapping>
+
+************************************************************************************
+MyBatis FrameWork
+
+1.Lib 설치 (Form.xml)
+ a.mybatis
+ b.mybatis-spring
+ c.spring-djbc
+ d.ojdbc6
+ e.common-dbcp2
+
+2.***-context.xml
+
+	<bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" id="dataSource">
+		<property name="username" value="spring01" />
+		<property name="password" value="spring01" />
+		<property name="url" value="jdbc:oracle:thin:@localhost:1521:xe" />
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" />
+	</bean>
+
+	<bean class="org.mybatis.spring.SqlSessionFactoryBean" id="sqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations" value="classpath:mappers/*Mapper.xml" />
+	</bean>
+
+	<bean class="org.mybatis.spring.SqlSessionTemplate" id="sqlSession">
+		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactoryBean" />
+	</bean>
+
+
+
+3.Mapper.xml
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="자기자신의 파일명">
+  <select id= "" resultType="풀 패키지명Object" parameterType="풀패키지명Object"></select>
+  <insert id="" parameterType="풀패키지명Object"></insert>
+  <update id="" parameterType="풀패키지명Object"></update>
+  <delete id="" parameterType="풀패키지명Object"></delete>
+</mapper>
+
+  **id: 한 매퍼 안에서 유일한 값을 가져야 함
+        보통 해당 DAO의 메서드명과 일치시킴
+
+  **myBatis like 검색
+    where title like '%'||#{title}||'%'
+
+4.DAO Class
+  private SqlSession session;
+  private String namespace="매퍼명.";
+
+  1)데이터를 하나 조회하는 경우
+   session.selectOne("매퍼명.id");		//파라미터가 없는 경우
+   session.selectOne("매퍼명.id", Object);	//파라미터가 있는 경우
+
+  2)데이터를 여러개 조회하는 경우(자동으로 List로 리턴)
+ 
+   session.seelctList("매퍼명.id");
+   session.seelctList("매퍼명.id", Object);
+
+
+
+ ------ parameter가 Map 인 경우
+	DAO
+	Map map = new HashMap();
+	map.put("t1","iu");
+	map.put("t2","25);
+	
+	Mapper
+	<insert> insert into test values(#{t1},#{t2})</insert>
+
+	DAO
+	Map map = new HashMap();
+	map.put("t1", "iu");
+	map.put("t2", "noticeDTO");
+
+	Mapper
+	<insert> insert into values(#{t1}, #{t2.writer})</insert>
+
+------ error
+	DAO
+	sqlSession.insert("test","iu")
+	Mapper
+	<insert> insert into test values(#{test})</isnert>
+
+
+
+
+5.동적SQL
+  <if></if>
+  <choose>
+    <when>   </when>
+    <others>   </others>
+  </choose>
+
+  <where>
+  <set>
+  <trim>
+  <sql>
+
+
+
+6. resultMap
+   1) select의 결과물의 culumn 명과 Bean의 변수명과 일치 하지 않을때
+
+	<select id="select" resultMap="noticeResult" parameterType="java.lang.Integer">
+  		select num as noticeNum, title noticeTitle from notice where num=#{num}
+  	</select>
+
+	<resultMap type="NoticeDTO" id="noticeResult">
+		//property : 변수명 , column : DB 컬럼명
+  		<id property="num" column="noticeNum"/>
+  		<result property="title" column="noticeTitle"/>
+  	</resultMap>
+
+   2) join의 결과물을 맵핑 할때
+      
+      a. 1:1의 관계
+	class A {
+	    B b;	
+	}
+   	NoticeDTO{
+	    private int num;
+	    ...	
+	    private FileDTO files;		
+	}
+
+	<select id="select" resultMap="noticeResult" parameterType="java.lang.Integer">
+  		select n.*, f.fnum, f.fname, f.oname
+		from notice n inner join files f
+ 		on n.num=f.num and f.kind='n' and n.num=#{num}
+  	</select>	
+
+	-- resultMap 내부에 association
+
+	<resultMap type="NoticeDTO" id="noticeResult">
+  		<id property="num" column="num"/>
+  		<result property="title" column="title"/>
+  		<association property="files" column="num" javaType="FileDTO">
+  			<id property="num" column="num"/>
+  			<result property="fname" column="fname"/>
+  		</association>
+  	</resultMap>
+
+	-- resultMap 외부에 또다른 resultMap사용
+
+	<resultMap type="NoticeDTO" id="noticeResult">
+  		<id property="num" column="num"/>
+  		<result property="title" column="title"/>
+  		<association resultMap="fileResult" property="files" column="num" javaType="FileDTO">
+  			
+  		</association>
+  	</resultMap>
+
+	<resultMap type="FileDTO" id="fileResult">
+  		<id property="fnum" column="fnum"/>
+  		<result property="num" column="num"/>
+  		<result property="fname" column="fname"/>
+  	</resultMap>
+
+	-- NoticeDTO에 파일의 정보를 저장하는 FileDTO가 멤버로 존재
+              -- qurery문 한버으로 두개의 정보를 모두 매핑
+              -- id는 pk로 사용되는 컬럼
+              -- association은 Bean의 멤버객체 1개를 정의 할때
+ 
+
+      b. 1:N의 관계
+	class A {
+	   List<b> b;	
+	}
+
+	NoticeDTO{
+	    private int num;
+	    ...
+	    private List<FileDTO> files;
+	}		
+
+	<select id="select" resultMap="noticeResult" parameterType="java.lang.Integer">
+  		select n.*, f.fnum, f.fname, f.oname
+		from notice n inner join files f
+ 		on n.num=f.num and f.kind='n' and n.num=#{num}
+  	</select>	
+
+	-- 내부 ResultMap
+	<resultMap type="NoticeDTO" id="noticeResult">
+  		<id property="num" column="num"/>
+  		<result property="title" column="title"/>
+  		<collection property="files" javaType="java.util.ArrayList" ofType="FileDTO">
+  			<id property="fnum" column="fnum"/>
+  			<result property="num" column="num"/>
+  			<result property="fname" column="fname"/>
+  		</collection>
+  	</resultMap>
+
+	-- 외부 ResultMap
+	<resultMap type="NoticeDTO" id="noticeResult">
+  		<id property="num" column="num"/>
+  		<result property="title" column="title"/>
+  		<collection resultMap="fileResult" property="files" javaType="java.util.ArrayList" ofType="FileDTO">
+  			
+  		</collection>
+  	</resultMap>
+  	
+  	<resultMap type="FileDTO" id="fileResult">
+  		<id property="fnum" column="fnum"/>
+  		<result property="num" column="num"/>
+  		<result property="fname" column="fname"/>
+  	</resultMap>
+	
+
+
+=============================================File Upload
+
+6.File Upload
+ 1)API(porm.xml)
+  <!-- https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload -->
+   <dependency>
+      <groupId>commons-fileupload</groupId>
+      <artifactId>commons-fileupload</artifactId>
+      <version>1.3.3</version>
+   </dependency>
+
+ 2)root-context.xml
+  <bean class="org.springframework.web.multipart.commons.CommonsMultipartResolver" id="multipartResolver">
+	<!-- 파일 총 size -->
+	<<property name="maxUploadSize" value="" />
+	<!-- 파일 당 size -->
+	<property name="maxUploadSizePerFile" value="10485760" />
+	<property name="defaultEncoding" value="UTF-8" />
+  </bean>
+
+ 3)jsp
+  <form method="post" enctype="multipart/form-data">
+
+ 4)Controller
+  --메서드의 매개변수로 
+
+  a.Multipart 객체 타입으로 처리
+   파라미터 이름이 같고 갯수가 여러개 일 때 :MultipartFile [] ar 
+ 
+  b.MultipartHttpServletRequest
+   HttpServletRequest와 쓰는 법은 유사.
+   request를 통해서 MultipartFile을 받을 때 사용
+  
+=================================================================================================
+//1. Spring 에서 제공하는 FileCopyUitls의 copy 메서드 사용
+	public String saveFile(String realPath, MultipartFile multipartFile) throws Exception {
+		String fileSystemName="";
+		//1. 저장할 경로명 realPath
+		//2. 저장할 파일명
+		File file = new File(realPath);
+		if(!file.exists()) {
+			file.mkdirs();
+		}
+		fileSystemName = UUID.randomUUID().toString();
+		String oname = multipartFile.getOriginalFilename();
+		oname = oname.substring(oname.lastIndexOf('.'));
+		fileSystemName = fileSystemName+oname;
+		System.out.println(fileSystemName);
+		file = new File(realPath, fileSystemName);
+		FileCopyUtils.copy(multipartFile.getBytes(), file);
+		
+		return fileSystemName;
+	}
+	
+//2. OutPutStream 이용
+	public String saveFile2(String realPath, MultipartFile multipartFile) throws Exception {
+		String fileSystemName="";
+		//1. 저장할 경로명 realPath
+		//2. 저장할 파일명
+		File file = new File(realPath);
+		if(!file.exists()) {
+			file.mkdirs();
+		}
+		fileSystemName = UUID.randomUUID().toString();
+		String oname = multipartFile.getOriginalFilename();
+		oname = oname.substring(oname.lastIndexOf('.'));
+		fileSystemName = fileSystemName+oname;
+		System.out.println(fileSystemName);
+		file = new File(realPath, fileSystemName);
+		FileOutputStream fo = new FileOutputStream(file);
+		fo.write(multipartFile.getBytes());
+		return fileSystemName;
+	}
+//3.MultipartFile의 transferTo 메서드 이용
+	public String saveFile3(String realPath, MultipartFile multipartFile) throws Exception {
+		String fileSystemName="";
+		//1. 저장할 경로명 realPath
+		//2. 저장할 파일명
+		File file = new File(realPath);
+		if(!file.exists()) {
+			file.mkdirs();
+		}
+		fileSystemName = UUID.randomUUID().toString();
+		String oname = multipartFile.getOriginalFilename();
+		oname = oname.substring(oname.lastIndexOf('.'));
+		fileSystemName = fileSystemName+oname;
+		System.out.println(fileSystemName);
+		file = new File(realPath, fileSystemName);
+		multipartFile.transferTo(file);
+		return fileSystemName;
+	}
+========================================= AOP ========================================================
+
+OOP - Object-Oriented Programming
+      재사용성
+
+AOP - Aspect-Oriented Programming
+      공통 관심 사항을 구현한 코드를 핵심 코드 안에 삽입
+       
+1.AOP 용어
+
+ Aspect		: 공통관심사의 추상적인 명칭
+
+ Advice		: 공통관심사 코드를 구현한 객체에 대한 명칭
+
+ Join points 	: 공통 관심사를 적용할 수 있는 대상들
+
+ Pointcuts	: 여러메서드들 중 실제 Advice가 적용 되는 메서드
+
+ Target		: Pointcut을 가지는 객체(class)
+
+ Proxy		: Advice가 적용되었을 때 만들어지는 객체
+
+
+2.Advice 종류
+
+ Before Advice		: 대상 메서드 호출 전
+ After Returning Advice	: 대상 메서드가 예외없이 실행 후 
+ After Throwing Advice	: 대상 메서드가 예외가 발생 한 후 (정상 종료가 아닐 때)
+ After Advice		: 대상 메서드가 예외발생의 여부와 관계없이 실행
+ Round Advice		: 대상 메서드의 호출 전, 후, 예외 상관없이 실행
+
+3.porm.xml 준비
+
+
+	1)Spring-AOP
+	<!-- https://mvnrepository.com/artifact/org.springframework/spring-aop -->
+	<dependency>
+	    <groupId>org.springframework</groupId>
+	    <artifactId>spring-aop</artifactId>
+ 	    <version>${org.springframework-version}</version>
+	</dependency>
+
+
+	2)AspectJ Weaver
+	<!-- https://mvnrepository.com/artifact/org.aspectj/aspectjweaver -->
+	<dependency>
+		<groupId>org.aspectj</groupId>
+		<artifactId>aspectjweaver</artifactId>
+		<version>${org.aspectj-version}</version>
+	</dependency>
+
+
+	3)spring-tx
+	<!-- https://mvnrepository.com/artifact/org.springframework/spring-tx -->
+	<dependency>
+		<groupId>org.springframework</groupId>
+		<artifactId>spring-tx</artifactId>
+		<version>${org.springframework-version}</version>
+	</dependency>
+
+
+
+4.AOP 설정
+
+ 1)XML 설정(root-context.xml)
+  
+//Target
+
+public class Transport {
+	//join points
+	
+	//point cut
+	public void bus() {
+		System.out.println("게임하기");
+		System.out.println("잠자기");
+	}
+	
+	//point cut
+	public void subway() {
+		System.out.println("노래듣기");
+		System.out.println("옆사람 카톡 보기");
+	}
+
+}
+===============================================================
+//Advice
+
+public class CardCheck {
+	public Object check(ProceedingJoinPoint join) {
+		System.out.println("카드찍기");
+		System.out.println("학생입니다.");
+		Object obj = null;
+		try {
+			obj = join.proceed();	//bus()
+		} catch (Throwable e) {
+			// TODO Auto-generated catch blocks
+			e.printStackTrace();
+		}
+		
+		System.out.println("카드찍기");
+		System.out.println("삑--");
+		return obj;
+	}
+	//
+	public void packing() {
+		System.out.println("짐 싸기");
+	}
+
+}
+
+================root-context.xml
+//Advice 객체 생성
+<bean class="com.iu.trans.CardCheck" id="cardCheck"></bean>
+
+//Target 객체 생성
+<bean class ="com.iu.trans.Transport" id="transport"></bean>
+
+//AOP 설정
+	<aop:config>
+		<aop:aspect id="cardAspect" ref="cardCheck">
+				<!-- target -->
+				<aop:around method="check" pointcut-ref="trans"/>
+				<aop:pointcut expression="execution(* com.iu.trans.Transport.*(..))" id="trans"/>
+		</aop:aspect>
+		<aop:aspect id="trip" ref="cardCheck">
+			<aop:before method="packing" pointcut-ref="p"/>
+			<aop:pointcut expression="execution(* com.iu.trans.Trip.*(..))" id="p"/>
+		</aop:aspect>
+	</aop:config>
+
+
+
+
+ 2)Annotation 설정
+
+ a.root-context.xml
+  <aop:aspectj-autoproxy />
+
+ b.Advice Class
+
+//Advice(공통적인 관심사)
+@Component
+@Aspect
+public class CardCheck {
+	@Around("execution(* com.iu.trans.Transport.*())")
+	public Object check(ProceedingJoinPoint join) {
+		System.out.println("카드찍기");
+		System.out.println("학생입니다.");
+		Object obj = null;
+		try {
+			obj = join.proceed();	//bus()
+		} catch (Throwable e) {
+			// TODO Auto-generated catch blocks
+			e.printStackTrace();
+		}
+		
+		System.out.println("카드찍기");
+		System.out.println("삑--");
+		return obj;
+	}
+	@Before("execution(* com.iu.trans.Trip.*())")
+	public void packing() {
+		System.out.println("짐 싸기");
+	}
+
+}
+
+
+ Aspectj PointCut 표현식
+ 1.execution(수식어패턴 리턴타입 패키지패턴 클래스명 메서드명패턴(파라미터 패턴))
+  1)수식어패턴
+   -생략 가능 
+   -public, protected 등
+
+  2)리턴타입
+   -리턴타입을 명시
+
+  3)패키지패턴
+   -패키지명 명시
+
+  4)클래스명패턴
+   -클래스패턴 명시
+
+  5)파라미터패턴
+
+
+ 
+ --공통
+  1)*	: 모든 값
+  2)..	: 0개 이상을 표현
+  
+  ex)
+   execution(public void set*(..))
+   접근지정자는 public 리턴타입은 void 메서드명이 set으로 시작하는 모든 메서드들
+   매개변수는 상관없이 전부
+
+   execution(* com.iu.test.*.*())
+   com.iu.test 패키지의 모든 클래스의 모든 메서드(매개변수가 없는)
+
+
+   execution(* set*(*))
+   set으로 시작되는 모든 메서드들 중 매개변수가 데이터타입 상관없이 1개인 것
+
+   execution(* set*(*,*))   
+   set으로 시작되는 모든 메서드들 중 매개변수가 데이터타입 상관없이 2개인 것
+
+   execution(* set*(String,..))
+   set으로 시작되는 모든 메서드들 중 첫번째 매개변수가 String이고 1개 이상의 파라미터를 가지는 메서드
+
+
+ 2.within
+  클래스 내의 모든 메서드
+
+  within(com.iu.trans.*)
+  com.iu.trans 패키지의 모든 메서드
+
+  within(com.iu.trans..*)
+  com.iu.trans 패키지와 하위 패키지 내의 모든 메서드
+
+  within(com.iu.board.BoardService.*)	//BoardService는 인터페이스
+  com.iu.board.BoardService 인터페이스의 모든 메서드
+
+
+
+ 3.bean
+  bean("NoticeService")
+  NoticeService 내의 모든 메서드
+
+  bean(*Service)
+  이름이 Service로 끝나는 bean의 메서드들
+
+
+ **표현식을 연결
+  각각의 표현식은 "&&" 나 "||"로 연결가능
+
+  execution("* com.iu.trans.Test.set*(..) || * com.iu.trans.Test2.set*()")
+
+======================================= Spring Transaction을 AOP로 처리 ================================
+1.설정
+ 1)API(Spring-tx)
+ 2)root-context.xml
+	<bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="transactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+2.Annotation 사용
+ 1)root-context.xml
+   <tx:annotation-driven proxy-target-class="true"/>
+
+ 2)@Transactional
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
