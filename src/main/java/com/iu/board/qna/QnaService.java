@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.iu.board.BoardDAO;
 import com.iu.board.BoardDTO;
 import com.iu.board.BoardService;
 import com.iu.file.FileDAO;

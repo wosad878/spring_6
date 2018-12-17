@@ -11,5 +11,6 @@
 		<typeAlias type="com.iu.util.Pager" alias="Pager"/>
 		<typeAlias type="com.iu.member.MemberDTO" alias="MemberDTO"/>
 		<typeAlias type="com.iu.file.FileDTO" alias="FileDTO"/>
+		<typeAlias type="com.iu.board.memo.MemoDTO" alias="MemoDTO"/>
 	</typeAliases>
 </configuration>

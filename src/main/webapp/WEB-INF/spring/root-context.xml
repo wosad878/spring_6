@@ -44,14 +44,15 @@
 		<property name="dataSource" ref="dataSource" />
 	</bean>
 	
-	<tx:annotation-driven proxy-target-class="true"/>
-			
-	<aop:aspectj-autoproxy />
+
 	
-	<context:component-scan base-package="com.iu.board.notice"></context:component-scan>
+	<context:component-scan base-package="com.iu.board.notice" >
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
 	<context:component-scan base-package="com.iu.board.qna"></context:component-scan>
 	<context:component-scan base-package="com.iu.member"></context:component-scan>
 	<context:component-scan base-package="com.iu.file"></context:component-scan>
 	<context:component-scan base-package="com.iu.trans"></context:component-scan>
+	<context:component-scan base-package="com.iu.board.memo"></context:component-scan>
 	
 </beans>

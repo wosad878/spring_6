@@ -1,7 +1,5 @@
 package com.iu.board.qna;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.List;
 
 import javax.inject.Inject;

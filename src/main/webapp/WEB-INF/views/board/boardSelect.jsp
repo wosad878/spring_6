@@ -29,7 +29,7 @@
 	<div>
 		<c:forEach items="${dto.files}" var="file" varStatus="i">
 			<div id="f${i.index}">
-				<a href="../resources/${board}/${file.fname}">${file.oname}</a>
+				<a href="../file/fileDown?fname=${file.fname}&oname=${file.oname}">${file.oname}</a>
 			</div>
 		
 		</c:forEach>

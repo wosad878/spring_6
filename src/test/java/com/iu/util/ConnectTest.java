@@ -1,6 +1,6 @@
 package com.iu.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import javax.inject.Inject;
 
